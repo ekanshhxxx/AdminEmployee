@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TechSolutions Inc.</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            background-color: #282c34;
+            color: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header .logo {
+            font-size: 1.5rem;
+        }
+
+        header nav a {
+            color: white;
+            margin: 0 1rem;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        header nav a:hover {
+            text-decoration: underline;
+        }
+
+        main {
+            padding: 2rem;
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        footer {
+            background-color: #282c34;
+            color: white;
+            text-align: center;
+            padding: 1rem;
+            position: relative;
+            width: 100%;
+        }
+
+        .team-cards {
+            display: flex;
+            overflow-x: auto;
+        }
+
+        .team-card {
+            border: 1px solid #ccc;
+            padding: 1rem;
+            margin-right: 1rem;
+            width: 250px;
+            cursor: pointer;
+            background-color: #f8f9fa;
+        }
+
+        .team-card h3 {
+            margin: 0 0 1rem 0;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 50%;
+            background-color: white;
+            padding: 2rem;
+            border: 1px solid #ccc;
+            z-index: 1000;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+        }
+
+        .modal-content {
+            margin-top: 1rem;
+        }
+
+        .modal-close {
+            cursor: pointer;
+            font-size: 1.5rem;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 0.5rem;
+            margin: 0.5rem 0;
+        }
+
+        button {
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #taskStatus {
+            margin-top: 1rem;
+            font-weight: bold;
+        }
+
+        /* Center the login form */
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh; /* Fill the entire viewport */
+        }
+
+        .login-box {
+            width: 300px;
+            padding: 2rem;
+            background-color: #f8f9fa;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .login-box input, .login-box select, .login-box button {
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">TechSolutions Inc.</div>
+        <nav>
+            <a href="#" id="loginLink">Login</a>
+            <a href="#" id="signupLink">Sign Up</a>
+            <a href="#" id="dashboardLink">Dashboard</a>
+        </nav>
+    </header>
+
+    <main id="mainContent">
+        <!-- Sections will be loaded here dynamically -->
+    </main>
+
+    <footer>
+        <p>&copy; 2024 TechSolutions Inc. All rights reserved.</p>
+    </footer>
+
+    <div id="teamModal" class="modal">
+        <div class="modal-header">
+            <h2>Team Details</h2>
+            <span class="modal-close" onclick="closeModal()">×</span>
+        </div>
+        <div class="modal-content">
+            <h3>Team Leader: <span id="modalLeader"></span></h3>
+            <p>Members: <span id="modalMembers"></span></p>
+            <p>Salary Paid: <span id="modalSalary"></span></p>
+            <p>Sick Leave: <span id="modalSickLeave"></span></p>
+            <!-- Task assignment section -->
+            <h4>Assign Task</h4>
+            <input type="text" id="taskInput" placeholder="Enter task" />
+            <button onclick="assignTask()">Assign Task</button>
+            <p id="taskStatus"></p>
+        </div>
+    </div>
+
+    <script>
+        let teams = [];
+        let currentUserRole = '';
+        let currentUser = '';
+        let currentTeamIndex = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const mainContent = document.getElementById('mainContent');
+
+            // Navigation links event listeners
+            document.getElementById('loginLink').addEventListener('click', () => loadSection('login'));
+            document.getElementById('signupLink').addEventListener('click', () => loadSection('signup'));
+            document.getElementById('dashboardLink').addEventListener('click', () => loadSection('dashboard'));
+
+            // Load initial section
+            loadSection('login');
+
+            function loadSection(section) {
+                switch(section) {
+                    case 'login':
+                        mainContent.innerHTML = `
+                            <div class="login-container">
+                                <div class="login-box">
+                                    <h2>Login</h2>
+                                    <form id="loginForm">
+                                        <input type="text" id="loginUsername" placeholder="Username" required />
+                                        <select id="loginRole">
+                                            <option value="admin">Admin</option>
+                                            <option value="teamLeader">Team Leader</option>
+                                            <option value="teamMember">Team Member</option>
+                                        </select>
+                                        <input type="password" id="loginPassword" placeholder="Password" required />
+                                        <button type="submit">Login</button>
+                                    </form>
+                                </div>
+                            </div>
+                        `;
+                        document.getElementById('loginForm').addEventListener('submit', handleLogin);
+                        break;
+
+                    case 'signup':
+                        mainContent.innerHTML = `
+                            <div class="signup">
+                                <h2>Sign Up</h2>
+                                <form id="signupForm">
+                                    <input type="text" id="signupUsername" placeholder="Username" required />
+                                    <input type="password" id="signupPassword" placeholder="Password" required />
+                                    <button type="submit">Sign Up</button>
+                                </form>
+                            </div>
+                        `;
+                        document.getElementById('signupForm').addEventListener('submit', handleSignUp);
+                        break;
+
+                    case 'dashboard':
+                        if (currentUserRole === 'admin') {
+                            loadAdminDashboard();
+                        } else {
+                            loadTeamDashboard();
+                        }
+                        break;
+
+                    default:
+                        mainContent.innerHTML = '<h1>Welcome to TechSolutions Inc.</h1>';
+                }
+            }
+
+            function handleLogin(event) {
+                event.preventDefault();
+                const username = document.getElementById('loginUsername').value;
+                const role = document.getElementById('loginRole').value;
+                currentUser = username;
+                currentUserRole = role;
+                alert(`Logged in as ${username} (${role})`);
+                loadSection('dashboard');
+            }
+
+            function handleSignUp(event) {
+                event.preventDefault();
+                const username = document.getElementById('signupUsername').value;
+                const password = document.getElementById('signupPassword').value;
+                alert(`Signed up successfully! Please log in with your credentials.`);
+                loadSection('login');
+            }
+
+            function loadAdminDashboard() {
+                mainContent.innerHTML = `
+                    <h2>Admin Dashboard</h2>
+                    <form id="teamForm">
+                        <input type="text" id="teamLeaderName" placeholder="Team Leader Name" required />
+                        <input type="text" id="teamMemberNames" placeholder="Team Members (comma-separated)" required />
+                        <button type="submit">Add Team</button>
+                    </form>
+                    <div class="team-cards" id="teamCards"></div>
+                `;
+                document.getElementById('teamForm').addEventListener('submit', addTeam);
+                displayTeams();
+            }
+
+            function addTeam(event) {
+                event.preventDefault();
+                const leader = document.getElementById('teamLeaderName').value;
+                const members = document.getElementById('teamMemberNames').value.split(',');
+                teams.push({ leader, members, salaryPaid: false, sickLeave: false, tasks: [] });
+                displayTeams();
+            }
+
+            function displayTeams() {
+                const teamCards = document.getElementById('teamCards');
+                teamCards.innerHTML = '';
+                teams.forEach((team, index) => {
+                    const teamCard = document.createElement('div');
+                    teamCard.classList.add('team-card');
+                    teamCard.innerHTML = `
+                        <h3>${team.leader}</h3>
+                        <p>${team.members.length} Members</p>
+                    `;
+                    teamCard.addEventListener('click', () => showTeamDetails(index));
+                    teamCards.appendChild(teamCard);
+                });
+            }
+
+            function showTeamDetails(index) {
+                currentTeamIndex = index;
+                const team = teams[index];
+                document.getElementById('modalLeader').textContent = team.leader;
+                document.getElementById('modalMembers').textContent = team.members.join(', ');
+                document.getElementById('modalSalary').textContent = team.salaryPaid ? 'Yes' : 'No';
+                document.getElementById('modalSickLeave').textContent = team.sickLeave ? 'Yes' : 'No';
+                document.getElementById('teamModal').style.display = 'block';
+            }
+
+            window.closeModal = function() {
+                document.getElementById('teamModal').style.display = 'none';
+            };
+
+            window.assignTask = function() {
+                const taskInput = document.getElementById('taskInput');
+                const task = taskInput.value.trim();
+                if (task && currentTeamIndex !== null) {
+                    teams[currentTeamIndex].tasks.push({ task, done: false });
+                    taskInput.value = '';
+                    document.getElementById('taskStatus').textContent = 'Task assigned successfully!';
+                } else {
+                    document.getElementById('taskStatus').textContent = 'Please enter a task.';
+                }
+            };
+        });
+    </script>
+</body>
+</html>
